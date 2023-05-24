@@ -1,0 +1,79 @@
+parse
+CREATE TABLE "database"."schema"."table" (
+    "id"        INTEGER,
+        /*{{ rownum }}*/
+    "name"      CHAR(40),
+        /*{{ rand.regex('[a-zA-Z ]{40}') }}*/
+    UNIQUE KEY "some_index"("id")
+);
+----
+CREATE TABLE "database"."schema"."table" (
+    "id"        INTEGER,
+    "name"      CHAR(40),
+    UNIQUE KEY "some_index"("id")
+);
+
+parse
+{{ @dirs := array['North', 'West', 'East', 'South'] }}
+CREATE TABLE cardinals (
+    t INTEGER       {{ rownum }},
+    d1 VARCHAR(5)   {{ @dirs[rand.zipf(4, 0.8)] }},
+    d2 VARCHAR(5)   {{ @dirs[rand.zipf(4, 0.8)] }}
+);
+----
+CREATE TABLE cardinals (
+    t INTEGER       ,
+    d1 VARCHAR(5)   ,
+    d2 VARCHAR(5)   
+);
+
+parse
+CREATE TABLE "parent" (
+    "parent_id" UUID PRIMARY KEY,
+        /*{{ @parent_id := rand.uuid() }}*/
+    "child_count" INT UNSIGNED NOT NULL
+        /*{{ @child_count := rand.range_inclusive(0, 4) }}*/
+);
+
+/*{{ for each row of "parent" generate @child_count rows of "child" }}*/
+CREATE TABLE "child" (
+    "child_id" UUID PRIMARY KEY,
+        /*{{ rand.uuid() }}*/
+    "parent_id" UUID NOT NULL REFERENCES "parent"("parent_id")
+        /*{{ @parent_id }}*/
+);
+----
+----
+CREATE TABLE "parent" (
+    "parent_id" UUID PRIMARY KEY,
+    "child_count" INT UNSIGNED NOT NULL
+);
+CREATE TABLE "child" (
+    "child_id" UUID PRIMARY KEY,
+    "parent_id" UUID NOT NULL REFERENCES "parent"("parent_id")
+);
+----
+----
+
+parse
+CREATE TABLE t (
+    {{ rownum }}
+    {{ rownum }}
+    d1 VARCHAR(5)
+    {{ rownum }}
+    {{ rownum }} d2 VARCHAR(5)
+);
+----
+CREATE TABLE t (
+    d1 VARCHAR(5)
+    d2 VARCHAR(5)
+);
+
+parse
+CREATE TABLE t (
+    d1 VARCHAR(5)
+) ENGINE=InnoDB;
+----
+CREATE TABLE t (
+    d1 VARCHAR(5)
+) ENGINE=InnoDB;
